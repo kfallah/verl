@@ -358,7 +358,25 @@ class RLHFDataset(Dataset):
         return len(self.dataframe)
 
     def _build_messages(self, example: dict):
-        return example.pop(self.prompt_key)
+        messages: list = example.pop(self.prompt_key)
+
+        if self.image_key in example or self.video_key in example:
+            for message in messages:
+                content = message["content"]
+                content_list = []
+                segments = re.split("(<image>|<video>)", content)
+                segments = [item for item in segments if item != ""]
+                for segment in segments:
+                    if segment == "<image>":
+                        content_list.append({"type": "image"})
+                    elif segment == "<video>":
+                        content_list.append({"type": "video"})
+                    else:
+                        content_list.append({"type": "text", "text": segment})
+
+                message["content"] = content_list
+
+        return messages
 
     def __getitem__(self, item):
         """
@@ -387,7 +405,7 @@ class RLHFDataset(Dataset):
             truncation=self.truncation,
         )
         
-        if self.processor is not None:
+        if self.processor is not None and re.match("glm4v", self.processor.__class__.__name__, re.IGNORECASE) and "Processor" in self.processor.__class__.__name__:
             position_ids, _ = get_rope_index(
                     self.processor,
                     input_ids=input_ids,
@@ -395,11 +413,13 @@ class RLHFDataset(Dataset):
                     video_grid_thw=model_inputs.get("video_grid_thw"),
                     attention_mask=attention_mask,
                 )
-            position_ids = position_ids.permute(1, 0, 2) # (1, 3, seq_len)
+            position_ids = position_ids.permute(1, 0, 2) # (batch_size, 3, seq_len)
+        else:
+            position_ids = compute_position_id_with_mask(attention_mask)
 
-        row_dict["input_ids"] = input_ids
-        row_dict["attention_mask"] = attention_mask
-        row_dict["position_ids"] = position_ids
+        row_dict["input_ids"] = input_ids[0]
+        row_dict["attention_mask"] = attention_mask[0]
+        row_dict["position_ids"] = position_ids[0]
 
         raw_prompt_ids = self.tokenizer.encode(raw_prompt, add_special_tokens=False)
         if len(raw_prompt_ids) > self.max_prompt_length:
