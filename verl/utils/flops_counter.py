@@ -31,6 +31,7 @@ VALID_CONFIG_TYPE = {
     "mistral",
     "gemma3_text",
     "seed_oss",
+    "glm4v",
 }
 
 
@@ -132,6 +133,7 @@ class FlopsCounter:
             "mistral": self._estimate_qwen2_flops,
             "gemma3_text": self._estimate_gemma3_flops,
             "seed_oss": self._estimate_qwen2_flops,
+            "glm4v": self._estimate_qwen2_flops,
         }
         self.config = config
 
