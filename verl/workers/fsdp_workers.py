@@ -1561,8 +1561,7 @@ class RewardModelWorker(Worker, DistProfilerExtension):
                 attn_implementation="flash_attention_2",
                 trust_remote_code=trust_remote_code,
             )
-            print(model_config)
-            print("============ Reward Model Config ============")
+
             apply_monkey_patch(
                 model=reward_module,
                 use_remove_padding=config.model.get("use_remove_padding", False),
