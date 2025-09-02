@@ -40,7 +40,7 @@ if package_version is None:
 elif vs.parse(package_version) >= vs.parse("0.7.0"):
     vllm_version = package_version
     if vs.parse(package_version) >= vs.parse("0.8.5"):
-        VLLM_SLEEP_LEVEL = 2
+        VLLM_SLEEP_LEVEL = 1
     from vllm import LLM
     from vllm.distributed import parallel_state
 else:
