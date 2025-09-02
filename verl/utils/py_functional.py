@@ -315,4 +315,7 @@ def convert_to_regular_types(obj):
         return [convert_to_regular_types(x) for x in obj]
     elif isinstance(obj, dict):
         return {k: convert_to_regular_types(v) for k, v in obj.items()}
+    elif isinstance(obj, str) and "," in obj:
+        # hack: treat comma strings as lists
+        return [s.strip() for s in obj.split(",")]
     return obj
