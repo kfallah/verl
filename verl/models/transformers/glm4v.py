@@ -331,7 +331,7 @@ def ulysses_flash_attn_forward(
 
     attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
     attn_output = self.o_proj(attn_output)
-    return attn_output, None
+    return attn_output, None, None
 
 
 @dataclass
