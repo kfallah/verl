@@ -169,6 +169,53 @@ def _ulysses_flash_attention_forward_transformers_4_55(
     return attn_output
 
 
+def patch_glm4v_masking_utils():
+    """
+    Patch transformers masking_utils._preprocess_mask_arguments to handle GLM4V's 3D position_ids.
+    
+    GLM4V uses 3D position_ids [3, batch_size, seq_len] for MRoPE, but transformers expects 2D.
+    This patch prevents the incompatible expansion that causes the error:
+    expand(torch.cuda.LongTensor{[3, 1, 17522]}, size=[1, -1])
+    """
+    try:
+        from transformers import masking_utils
+        
+        # Store the original function
+        if not hasattr(masking_utils, '_original_preprocess_mask_arguments'):
+            masking_utils._original_preprocess_mask_arguments = masking_utils._preprocess_mask_arguments
+        
+        def _patched_preprocess_mask_arguments(
+            config,
+            input_embeds,
+            attention_mask,
+            cache_position,
+            past_key_values,
+            position_ids,
+            layer_idx,
+        ):
+            # Handle GLM4V's 3D position_ids for MRoPE
+            if (position_ids is not None and 
+                position_ids.dim() == 3 and 
+                hasattr(config, 'model_type') and 
+                config.model_type == 'glm4v'):
+                # For GLM4V with 3D position_ids, we skip the packed sequence detection
+                # that causes the incompatible expansion, and let the model handle position_ids internally
+                return False, attention_mask, None, input_embeds.shape[1], 0
+            
+            # Fall back to original implementation for all other cases
+            return masking_utils._original_preprocess_mask_arguments(
+                config, input_embeds, attention_mask, cache_position, 
+                past_key_values, position_ids, layer_idx
+            )
+        
+        # Apply the patch
+        masking_utils._preprocess_mask_arguments = _patched_preprocess_mask_arguments
+        print("Applied GLM4V masking utils patch for 3D position_ids compatibility")
+        
+    except ImportError:
+        print("Warning: Could not patch masking_utils - transformers version may not support it")
+
+
 def patch_vlm_for_ulysses_input_slicing(model_class: type):
     """
     Applies a monkey patch to the forward method of a given model class
@@ -348,6 +395,9 @@ def apply_monkey_patch(
 
     if model.config.model_type == "glm4v":
         from transformers.models.glm4v.modeling_glm4v import Glm4vTextAttention
+
+        # Apply GLM4V masking utils patch for 3D position_ids compatibility
+        patch_glm4v_masking_utils()
 
         if use_remove_padding or ulysses_sp_size > 1:
             # Use GLM4V-specific Ulysses FlashAttention forward implementation to avoid calling Qwen2-VL implementation
