@@ -410,7 +410,9 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
             reduce_dtype = torch.float32
             buffer_dtype = torch.float32
 
-        mixed_precision = MixedPrecision(param_dtype=param_dtype, reduce_dtype=reduce_dtype, buffer_dtype=buffer_dtype)
+        mixed_precision = MixedPrecision(
+            param_dtype=param_dtype, reduce_dtype=reduce_dtype, buffer_dtype=buffer_dtype, cast_forward_inputs=True
+        )
 
         auto_wrap_policy = get_fsdp_wrap_policy(
             module=actor_module,
