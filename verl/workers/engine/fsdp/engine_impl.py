@@ -659,7 +659,7 @@ class FSDPEngineWithLMHead(FSDPEngine):
         micro_batch = micro_batch.to(get_device_id())
         micro_batch_tensor = micro_batch.batch
 
-        response_length = micro_batch_tensor["responses"].size(-1)
+        response_length = micro_batch_tensor["input_ids"].size(-1)
         multi_modal_inputs = {}
         if "multi_modal_inputs" in micro_batch_tensor.keys():
             if "image_bound" in micro_batch_tensor["multi_modal_inputs"][0]:  # minicpm-o logic

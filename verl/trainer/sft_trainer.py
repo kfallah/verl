@@ -141,8 +141,9 @@ class SFTTrainer:
     def _build_dataset(self):
         config = self.config
         tokenizer = self.model_config.tokenizer
-        train_dataset = create_sft_dataset(config.data.train_files, config.data, tokenizer)
-        val_dataset = create_sft_dataset(config.data.val_files, config.data, tokenizer)
+        processor = self.model_config.processor
+        train_dataset = create_sft_dataset(config.data.train_files, config.data, tokenizer, processor)
+        val_dataset = create_sft_dataset(config.data.val_files, config.data, tokenizer, processor)
 
         self.train_dataset, self.val_dataset = train_dataset, val_dataset
 
@@ -479,7 +480,7 @@ def main(config):
     run_sft(config)
 
 
-def create_sft_dataset(data_paths, data_config, tokenizer):
+def create_sft_dataset(data_paths, data_config, tokenizer, processor):
     """Create a dataset."""
     # build dataset
     # First check if a custom dataset class is specified
@@ -487,16 +488,16 @@ def create_sft_dataset(data_paths, data_config, tokenizer):
         from verl.utils.import_utils import load_extern_type
 
         dataset_cls = load_extern_type(data_config.custom_cls.path, data_config.custom_cls.name)
-    elif data_config.get("multiturn", {}).get("enable", False):
-        dataset_cls = MultiTurnSFTDataset
-    # Default to single-turn dataset
     else:
-        dataset_cls = SFTDataset
+        dataset_cls = MultiTurnSFTDataset
 
     # Create datasets based on the selected class
-    dataset = dataset_cls(parquet_files=data_paths, tokenizer=tokenizer, config=data_config)
+    dataset = dataset_cls(parquet_files=data_paths, tokenizer=tokenizer, processor=processor, config=data_config)
     return dataset
 
 
 if __name__ == "__main__":
+    # import debugpy
+    # debugpy.listen(5678)
+    # debugpy.wait_for_client()
     main()
