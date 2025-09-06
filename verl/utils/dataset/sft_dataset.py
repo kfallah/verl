@@ -183,4 +183,5 @@ class SFTDataset(Dataset):
             "attention_mask": attention_mask,
             "position_ids": position_ids,
             "loss_mask": loss_mask,
+            "responses": response_ids,
         }

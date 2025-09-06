@@ -45,6 +45,7 @@ from verl.utils.distributed import destroy_global_process_group
 from verl.utils.flops_counter import FlopsCounter
 from verl.utils.logger import log_with_rank
 from verl.utils.tracking import Tracking
+from verl.utils.dataset import SFTDataset
 
 if is_cuda_available:
     pass
@@ -486,9 +487,11 @@ def create_sft_dataset(data_paths, data_config, tokenizer):
         from verl.utils.import_utils import load_extern_type
 
         dataset_cls = load_extern_type(data_config.custom_cls.path, data_config.custom_cls.name)
-    else:
-        # Default to multi-turn dataset
+    elif data_config.get("multiturn", {}).get("enable", False):
         dataset_cls = MultiTurnSFTDataset
+    # Default to single-turn dataset
+    else:
+        dataset_cls = SFTDataset
 
     # Create datasets based on the selected class
     dataset = dataset_cls(parquet_files=data_paths, tokenizer=tokenizer, config=data_config)

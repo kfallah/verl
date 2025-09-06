@@ -135,8 +135,7 @@ class FSDPEngine(BaseEngine):
         )
 
     def is_mp_src_rank_with_outputs(self):
-        is_collect = self.ulysses_device_mesh["sp"].get_local_rank() == 0
-        return is_collect
+        return self.ulysses_device_mesh is None or self.ulysses_device_mesh["sp"].get_local_rank() == 0
 
     def initialize(self):
         """
