@@ -663,6 +663,7 @@ def get_hf_auto_model_class(hf_config):
         AutoModel,
         AutoModelForCausalLM,
         AutoModelForVision2Seq,
+        AutoModelForImageTextToText,
     )
 
     has_remote_code = hasattr(hf_config, "auto_map") and any(
@@ -675,6 +676,8 @@ def get_hf_auto_model_class(hf_config):
                 actor_module_class = AutoModelForVision2Seq
             case "AutoModelForCausalLM":
                 actor_module_class = AutoModelForCausalLM
+            case "AutoModelForImageTextToText":
+                actor_module_class = AutoModelForImageTextToText
             case _:
                 actor_module_class = AutoModel
     else:
@@ -682,6 +685,8 @@ def get_hf_auto_model_class(hf_config):
             actor_module_class = AutoModelForVision2Seq
         elif type(hf_config) in AutoModelForCausalLM._model_mapping.keys():
             actor_module_class = AutoModelForCausalLM
+        elif type(hf_config) in AutoModelForImageTextToText._model_mapping.keys():
+            actor_module_class = AutoModelForImageTextToText
         else:
             actor_module_class = AutoModel
 
