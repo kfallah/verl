@@ -197,7 +197,7 @@ def patch_glm4v_masking_utils():
             if (position_ids is not None and 
                 position_ids.dim() == 3 and 
                 hasattr(config, 'model_type') and 
-                config.model_type == 'glm4v'):
+                config.model_type in {'glm4v', 'glm4v_text'}):
                 # For GLM4V with 3D position_ids, we skip the packed sequence detection
                 # that causes the incompatible expansion, and let the model handle position_ids internally
                 return False, attention_mask, None, input_embeds.shape[1], 0
